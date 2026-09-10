@@ -1,157 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search,
-  LayoutDashboard,
-  FolderKanban,
-  Users,
-  Settings,
-  LogOut,
-  Hash,
   ChevronDown,
   ChevronLeft,
   CalendarClock,
   History,
   ChevronRight,
-  Inbox,
-  Calendar,
-  Activity,
-  GraduationCap,
-  Terminal,
-  Blocks,
   Bell,
-  Megaphone,
   Ticket,
   TicketCheck,
   Mail,
+  MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Command,
   X,
-  Plus,
   UserCircle
 } from 'lucide-react';
 import { CoverflowCarousel, type CoverflowSlide } from './coverflow-carousel';
-import { type iCardItem } from './cards-parallax';
 import { Carousel, CarouselControl, type SlideData } from './carousel-3d';
 import { CalendarPage } from './calendar-page';
-import { ProjectShowcase, projects as showcaseProjects, type Project } from './project-showcase';
-import { ProjectDetailView, buildProjectDetail } from './project-detail-view';
+import { TeacherClassesPage } from './teacher-classes';
+import { OfficeAnnouncePage } from './office-announce';
+import { OfficeTicketsPage } from './office-tickets';
+import { AdminUsersPage, type AdminView } from './admin-users';
 import { motion, AnimatePresence } from 'framer-motion';
 import { mainAnimation } from './main-animation';
+import { offices, generalAnnouncements, type Role } from '@/lib/campus-data';
+import {
+  BOTTOM_NAV,
+  LANDING_PAGE,
+  NAV_BY_ROLE,
+  navTitleFor,
+  type NavGroupData,
+  type NavItemData,
+} from '@/lib/roles';
 
-/** Account type shown under the profile name. One of: 'Student' | 'Teacher' | 'Office' | 'Admin'. */
-const ACCOUNT_TYPE: 'Student' | 'Teacher' | 'Office' | 'Admin' = 'Student';
+export type { NavGroupData, NavItemData };
+
+const ACCOUNT_TYPE: Role = 'Student';
 const ACCOUNT_NAME = 'MABALA, JEFF AIVAN RECESIO';
 
-interface OfficeGroup {
-  id: string;
-  name: string;
-  image: string;
-  posts: iCardItem[];
-}
-
-const offices: OfficeGroup[] = [
-  {
-    id: 'campus-ministry',
-    name: 'Campus Ministry Office',
-    image: '/ph/380373305_721924509949153_4072438841785184332_n (1).jpg',
-    posts: [
-      {
-        title: 'First Friday Mass',
-        description: 'Join us this Friday for the monthly community mass.',
-        tag: 'faith',
-        src: '/announce/771983724_1077843414900569_3468744417613042016_n.jpg',
-        link: '#',
-        color: '#1f4d36',
-        textColor: '#f5f5f0',
-      },
-    ],
-  },
-  {
-    id: 'sports',
-    name: 'Sports & Intramurals Office',
-    image: '/ph/481767636_1071918078283126_1976114256478202182_n.jpg',
-    posts: [
-      {
-        title: 'Intramurals 2022',
-        description: 'Games schedule and venue assignments are now posted.',
-        tag: 'sports',
-        src: '/announce/772361872_1042296375337033_8364753388393949849_n.jpg',
-        link: '#',
-        color: '#c8442c',
-        textColor: '#fff8ee',
-      },
-    ],
-  },
-  {
-    id: 'registrar',
-    name: "Registrar's Office",
-    image: '/ph/480461035_1065858045555796_5108185348006453231_n.jpg',
-    posts: [
-      {
-        title: 'Enrollment Open',
-        description: 'New and returning students may now enroll for the term.',
-        tag: 'academics',
-        src: '/announce/773315825_27645509678452165_3890959067758537377_n.jpg',
-        link: '#',
-        color: '#d9a441',
-        textColor: '#2b1c0e',
-      },
-    ],
-  },
-  {
-    id: 'student-affairs',
-    name: 'Student Affairs Office',
-    image: '/ph/764817684_1020547177416620_41274359214352043_n.jpg',
-    posts: [
-      {
-        title: 'Foundation Anniversary',
-        description: 'Celebrating another year, join the festivities on campus.',
-        tag: 'events',
-        src: '/announce/774148810_1520582356750027_5902072969027425279_n.jpg',
-        link: '#',
-        color: '#2f5f8a',
-        textColor: '#f5f9ff',
-      },
-      {
-        title: 'Community Outreach',
-        description: 'Volunteers gathered for this month\'s outreach program.',
-        tag: 'events',
-        src: '/announce/774512658_1520479893426940_454836178337933128_n.jpg',
-        link: '#',
-        color: '#7a3f9d',
-        textColor: '#f8f1ff',
-      },
-    ],
-  },
-  {
-    id: 'admin',
-    name: 'Administration Office',
-    image: '/ph/484181020_1086760376798896_921946633862466358_n.jpg',
-    posts: [
-      {
-        title: 'Holiday Advisories',
-        description: 'There will be NO CLASSES and NO OFFICE TRANSACTIONS at ALL LEVELS on the following dates: Wednesday, August 26 - Muslim Legal Holiday. Monday, August 31 - National Heroes Day. #opusvitalux',
-        tag: 'advisory',
-        src: '/announce/785993233_1053237037566691_3518901697778432703_n.jpg',
-        link: '#',
-        color: '#166a6a',
-        textColor: '#eefdfd',
-      },
-    ],
-  },
-].map((office) => ({
-  ...office,
-  image: encodeURI(office.image),
-  posts: office.posts.map((post) => ({ ...post, src: encodeURI(post.src) })),
-}));
-
 const carouselSlides: CoverflowSlide[] = offices.map((office) => ({ src: office.image, alt: office.name }));
-
-/** School-wide feed for the Home page — every office's posts pooled together. */
-const generalAnnouncements = offices.flatMap((office) =>
-  office.posts.map((post) => ({ ...post, office: office.name })),
-);
 
 interface AssignmentDue {
   id: number;
@@ -181,7 +71,7 @@ const recentActivity: ActivityEntry[] = [
 
 interface ChatMessage {
   id: number;
-  from: 'student' | 'office';
+  from: 'me' | 'office';
   text: string;
   time: string;
 }
@@ -193,8 +83,12 @@ interface InboxItem {
   preview: string;
   time: string;
   unread: boolean;
-  /** Present only for support-ticket messages, mirroring student-route's ticket status. */
-  ticketStatus?: 'pending' | 'closed';
+  /**
+   * Present only for two-way threads. 'pending' is a student ticket still
+   * waiting on office approval, 'open' is an approved ticket or a teacher's
+   * direct thread, 'closed' is finished either way.
+   */
+  ticketStatus?: 'pending' | 'open' | 'closed';
   /**
    * Present only for ticket threads. Local state stand-in for what would be
    * a realtime feed later — same shape, just polled/pushed by hand for now.
@@ -338,80 +232,6 @@ const classCatalog: Omit<JoinedClass, 'status'>[] = [
   ...initialJoinedClasses.map(({ code, subject, schedule, teacher }) => ({ code, subject, schedule, teacher })),
   { code: 'BIO101', subject: 'General Biology', schedule: 'TTh 8:00–9:30 AM', teacher: 'Ms. Fernandez' },
   { code: 'ART101', subject: 'Art Appreciation', schedule: 'F 10:00–12:00 PM', teacher: 'Mr. Torres' },
-];
-
-export type NavItemData = {
-  id: string;
-  title: string;
-  icon: React.ElementType;
-  badge?: number | string;
-  shortcut?: string;
-  children?: NavItemData[];
-};
-
-export type NavGroupData = {
-  heading?: string;
-  items: NavItemData[];
-};
-
-const mockNavGroups: NavGroupData[] = [
-  {
-    items: [
-      { id: 'search', title: 'Search', icon: Search, shortcut: '⌘K' },
-      { id: 'home', title: 'Home', icon: LayoutDashboard },
-      { id: 'inbox', title: 'Inbox', icon: Inbox, badge: 12 },
-      { id: 'announcement', title: 'Announcement', icon: Megaphone },
-      { id: 'analytics', title: 'Analytics', icon: Activity },
-    ]
-  },
-  {
-    heading: 'Workspace',
-    items: [
-      {
-        id: 'projects',
-        title: 'Projects',
-        icon: FolderKanban,
-        children: [
-          { id: 'p-active', title: 'Active', icon: Hash },
-          { id: 'p-archived', title: 'Archived', icon: Hash },
-        ]
-      },
-      { id: 'calendar', title: 'Calendar', icon: Calendar },
-      {
-        id: 'team',
-        title: 'Team',
-        icon: Users,
-        children: [
-          { id: 't-design', title: 'Designers', icon: Hash },
-          { id: 't-eng', title: 'Engineering', icon: Hash },
-          { id: 't-product', title: 'Product', icon: Hash },
-        ]
-      },
-      {
-        id: 'classes',
-        title: 'Classes',
-        icon: GraduationCap,
-        children: [
-          { id: 'cl-enrolled', title: 'Enrolled', icon: Hash },
-          { id: 'cl-finished', title: 'Finished', icon: Hash },
-          { id: 'cl-failed', title: 'Failed', icon: Hash },
-          { id: 'cl-dropped', title: 'Dropped', icon: Hash },
-        ]
-      },
-    ]
-  },
-  {
-    heading: 'Developers',
-    items: [
-      { id: 'api', title: 'API Keys', icon: Terminal },
-      { id: 'webhooks', title: 'Webhooks', icon: Blocks },
-    ]
-  }
-];
-
-const mockBottomItems: NavItemData[] = [
-  { id: 'settings', title: 'Settings', icon: Settings, shortcut: '⌘,' },
-  { id: 'logout', title: 'Log out', icon: LogOut },
 ];
 
 function WorkspaceSwitcher({ selected, subtitle = ACCOUNT_TYPE, onViewProfile }: { selected?: string, subtitle?: string, onViewProfile?: () => void }) {
@@ -572,7 +392,7 @@ export function SidebarNav({
   activeWorkspace,
   workspaceSubtitle,
   onViewProfile,
-  groups = mockNavGroups,
+  groups = NAV_BY_ROLE.Student,
 }: {
   className?: string,
   activeId?: string,
@@ -611,7 +431,7 @@ export function SidebarNav({
       </div>
 
       <div className="mt-auto pt-4 border-t border-border/50 flex flex-col gap-0.5">
-        {mockBottomItems.map(item => (
+        {BOTTOM_NAV.map(item => (
           <NavItem
             key={item.id}
             item={item}
@@ -623,16 +443,6 @@ export function SidebarNav({
     </div>
   );
 }
-
-const allItems = [...mockNavGroups.flatMap(g => g.items), ...mockBottomItems];
-const flattenItems = (items: NavItemData[]): NavItemData[] => {
-  return items.reduce((acc, item) => {
-    acc.push(item);
-    if (item.children) acc.push(...flattenItems(item.children));
-    return acc;
-  }, [] as NavItemData[]);
-};
-const flatMockData = flattenItems(allItems);
 
 function SenderAvatar({ from }: { from: string }) {
   const office = offices.find((o) => o.name === from);
@@ -649,6 +459,29 @@ function SenderAvatar({ from }: { from: string }) {
     <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
       {from.charAt(0)}
     </div>
+  );
+}
+
+const THREAD_STATUS_LABELS: Record<NonNullable<InboxItem['ticketStatus']>, string> = {
+  pending: 'Pending approval',
+  open: 'Open',
+  closed: 'Closed',
+};
+
+const THREAD_STATUS_STYLES: Record<NonNullable<InboxItem['ticketStatus']>, string> = {
+  pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  open: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  closed: 'bg-black/5 dark:bg-white/10 text-muted-foreground',
+};
+
+function ThreadStatusChip({ status }: { status?: InboxItem['ticketStatus'] }) {
+  if (!status) return null;
+  return (
+    <span
+      className={`text-[10px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 shrink-0 ${THREAD_STATUS_STYLES[status]}`}
+    >
+      {THREAD_STATUS_LABELS[status]}
+    </span>
   );
 }
 
@@ -706,17 +539,7 @@ function MessageThreadRow({ item, onClick }: { item: InboxItem; onClick: () => v
           <p className={`text-sm truncate ${item.unread ? 'text-foreground' : 'text-muted-foreground'}`}>
             {item.subject}
           </p>
-          {item.ticketStatus && (
-            <span
-              className={`text-[10px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 shrink-0 ${
-                item.ticketStatus === 'pending'
-                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                  : 'bg-black/5 dark:bg-white/10 text-muted-foreground'
-              }`}
-            >
-              {item.ticketStatus === 'pending' ? 'Pending approval' : 'Closed'}
-            </span>
-          )}
+          <ThreadStatusChip status={item.ticketStatus} />
         </div>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{item.preview}</p>
       </div>
@@ -740,6 +563,9 @@ function ChatView({
   onCloseTicket: () => void;
   onBack: () => void;
 }) {
+  /** A closed thread is read-only; pending student tickets wait on office approval. */
+  const canReply = item.ticketStatus === 'pending' || item.ticketStatus === 'open';
+
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <div className="flex items-center gap-3 pb-4 border-b border-border/50 shrink-0">
@@ -754,18 +580,8 @@ function ChatView({
           <p className="text-sm font-semibold text-foreground truncate">{item.from}</p>
           <p className="text-xs text-muted-foreground truncate">{item.subject}</p>
         </div>
-        {item.ticketStatus && (
-          <span
-            className={`text-[10px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 shrink-0 ${
-              item.ticketStatus === 'pending'
-                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                : 'bg-black/5 dark:bg-white/10 text-muted-foreground'
-            }`}
-          >
-            {item.ticketStatus === 'pending' ? 'Pending approval' : 'Closed'}
-          </span>
-        )}
-        {item.ticketStatus === 'pending' && (
+        <ThreadStatusChip status={item.ticketStatus} />
+        {canReply && (
           <button
             onClick={onCloseTicket}
             className="text-xs font-medium px-3 py-1.5 rounded-lg border border-border/50 hover:bg-black/5 dark:hover:bg-white/5 transition-colors shrink-0"
@@ -778,10 +594,10 @@ function ChatView({
       <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col gap-2 py-4">
         {item.messages && item.messages.length > 0 ? (
           item.messages.map((m) => (
-            <div key={m.id} className={`flex flex-col ${m.from === 'student' ? 'items-end' : 'items-start'}`}>
+            <div key={m.id} className={`flex flex-col ${m.from === 'me' ? 'items-end' : 'items-start'}`}>
               <div
                 className={`max-w-[70%] rounded-2xl px-3 py-2 text-sm ${
-                  m.from === 'student'
+                  m.from === 'me'
                     ? 'bg-primary text-primary-foreground rounded-br-sm'
                     : 'bg-black/5 dark:bg-white/5 text-foreground rounded-bl-sm'
                 }`}
@@ -796,7 +612,7 @@ function ChatView({
         )}
       </div>
 
-      {item.ticketStatus === 'pending' && (
+      {canReply && (
         <div className="flex gap-2 pt-3 border-t border-border/50 shrink-0">
           <input
             autoFocus
@@ -1002,16 +818,19 @@ export default function SidebarNavPreview({
   onLogout,
 }: {
   accountName?: string;
-  accountType?: string;
+  accountType?: Role;
   onLogout?: () => void;
 } = {}) {
   const [isOpen, setIsOpen] = useState(true);
-  const [activeId, setActiveId] = useState('home');
+  const [activeId, setActiveId] = useState(LANDING_PAGE[accountType]);
   const activeWorkspace = accountName;
+  /** Teachers reach offices directly; students have to get a ticket approved first. */
+  const messagesOfficesDirectly = accountType === 'Teacher';
+  /** An office account signs in under its office's name; fall back to the first office. */
+  const officeNameForAccount = offices.some((o) => o.name === accountName) ? accountName : offices[0].name;
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [officeIndex, setOfficeIndex] = useState(0);
   const [ticketPanelView, setTicketPanelView] = useState<'idle' | 'form' | 'submitted'>('idle');
   const [ticketTopic, setTicketTopic] = useState('');
@@ -1030,7 +849,7 @@ export default function SidebarNavPreview({
               ...item,
               preview: text,
               time: 'Just now',
-              messages: [...(item.messages ?? []), { id: Date.now(), from: 'student', text, time: 'Just now' }],
+              messages: [...(item.messages ?? []), { id: Date.now(), from: 'me', text, time: 'Just now' }],
             }
           : item,
       ),
@@ -1056,8 +875,8 @@ export default function SidebarNavPreview({
         preview: question,
         time: 'Just now',
         unread: true,
-        ticketStatus: 'pending',
-        messages: [{ id: Date.now(), from: 'student', text: question, time: 'Just now' }],
+        ticketStatus: messagesOfficesDirectly ? 'open' : 'pending',
+        messages: [{ id: Date.now(), from: 'me', text: question, time: 'Just now' }],
       },
       ...items,
     ]);
@@ -1104,16 +923,15 @@ export default function SidebarNavPreview({
   const officePostSlides: SlideData[] = activeOffice.posts.map((p) => ({ title: p.title, button: 'View details', src: p.src }));
   /** Each office keeps a single open thread — resubmitting continues it instead of forking a new one. */
   const officeTicket = inboxItems.find((i) => i.from === activeOffice.name && i.ticketStatus);
-  const officeTicketPending = officeTicket?.ticketStatus === 'pending';
+  const officeThreadLive = officeTicket?.ticketStatus === 'pending' || officeTicket?.ticketStatus === 'open';
 
   const unreadCount = inboxItems.filter((item) => item.unread).length;
-  const navGroupsWithLiveBadge: NavGroupData[] = mockNavGroups.map((group) => ({
+  const navGroupsWithLiveBadge: NavGroupData[] = NAV_BY_ROLE[accountType].map((group) => ({
     ...group,
     items: group.items.map((item) => (item.id === 'inbox' ? { ...item, badge: unreadCount || undefined } : item)),
   }));
 
-  const activeItem = flatMockData.find(i => i.id === activeId);
-  const activeTitle = activeItem ? activeItem.title : 'Dashboard';
+  const activeTitle = navTitleFor(accountType, activeId);
 
   const handleSelect = (id: string) => {
     setShowProfile(false);
@@ -1314,8 +1132,14 @@ export default function SidebarNavPreview({
                      <div className="flex flex-col items-center text-center gap-3 m-auto">
                        <TicketCheck className="w-8 h-8 text-emerald-500" strokeWidth={1.5} />
                        <div>
-                         <p className="text-sm font-semibold text-foreground">Ticket submitted</p>
-                         <p className="text-xs text-muted-foreground mt-1">Pending approval — check your inbox for updates.</p>
+                         <p className="text-sm font-semibold text-foreground">
+                           {messagesOfficesDirectly ? 'Message sent' : 'Ticket submitted'}
+                         </p>
+                         <p className="text-xs text-muted-foreground mt-1">
+                           {messagesOfficesDirectly
+                             ? 'The office can reply right away — continue the thread in your inbox.'
+                             : 'Pending approval — check your inbox for updates.'}
+                         </p>
                        </div>
                        <button
                          onClick={() => handleSelect('inbox')}
@@ -1327,8 +1151,14 @@ export default function SidebarNavPreview({
                    ) : ticketPanelView === 'form' ? (
                      <div className="flex flex-col gap-3">
                        <div className="flex items-center gap-2">
-                         <Ticket className="w-5 h-5 text-muted-foreground shrink-0" strokeWidth={1.5} />
-                         <p className="text-sm font-semibold text-foreground">New ticket</p>
+                         {messagesOfficesDirectly ? (
+                           <MessageSquare className="w-5 h-5 text-muted-foreground shrink-0" strokeWidth={1.5} />
+                         ) : (
+                           <Ticket className="w-5 h-5 text-muted-foreground shrink-0" strokeWidth={1.5} />
+                         )}
+                         <p className="text-sm font-semibold text-foreground">
+                           {messagesOfficesDirectly ? 'Message office' : 'New ticket'}
+                         </p>
                        </div>
                        <p className="text-xs text-muted-foreground -mt-2">{activeOffice.name}</p>
 
@@ -1354,7 +1184,9 @@ export default function SidebarNavPreview({
                              setTicketQuestion(e.target.value);
                              if (ticketErrors.question) setTicketErrors((err) => ({ ...err, question: undefined }));
                            }}
-                           placeholder="Describe your question or concern"
+                           placeholder={
+                             messagesOfficesDirectly ? 'Write your message to this office' : 'Describe your question or concern'
+                           }
                            rows={4}
                            className="w-full mt-1 text-sm bg-background border border-border/50 rounded-lg px-3 py-2 outline-none focus:border-primary/50 transition-colors resize-none"
                          />
@@ -1377,16 +1209,24 @@ export default function SidebarNavPreview({
                            onClick={handleSubmitTicket}
                            className="flex-1 text-xs font-medium px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                          >
-                           Submit
+                           {messagesOfficesDirectly ? 'Send' : 'Submit'}
                          </button>
                        </div>
                      </div>
-                   ) : officeTicketPending && officeTicket ? (
+                   ) : officeThreadLive && officeTicket ? (
                      <div className="flex flex-col items-center text-center gap-3 m-auto">
-                       <Ticket className="w-8 h-8 text-amber-500" strokeWidth={1.5} />
+                       {messagesOfficesDirectly ? (
+                         <MessageSquare className="w-8 h-8 text-emerald-500" strokeWidth={1.5} />
+                       ) : (
+                         <Ticket className="w-8 h-8 text-amber-500" strokeWidth={1.5} />
+                       )}
                        <div>
-                         <p className="text-sm font-semibold text-foreground">Ticket in progress</p>
-                         <p className="text-xs text-muted-foreground mt-1">You already have an open ticket with {activeOffice.name}.</p>
+                         <p className="text-sm font-semibold text-foreground">
+                           {messagesOfficesDirectly ? 'Thread in progress' : 'Ticket in progress'}
+                         </p>
+                         <p className="text-xs text-muted-foreground mt-1">
+                           You already have an open {messagesOfficesDirectly ? 'thread' : 'ticket'} with {activeOffice.name}.
+                         </p>
                        </div>
                        <button
                          onClick={() => {
@@ -1396,21 +1236,31 @@ export default function SidebarNavPreview({
                          }}
                          className="mt-2 px-4 py-2 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                        >
-                         View Ticket
+                         {messagesOfficesDirectly ? 'View Thread' : 'View Ticket'}
                        </button>
                      </div>
                    ) : (
                      <div className="flex flex-col items-center text-center gap-3 m-auto">
-                       <Ticket className="w-8 h-8 text-muted-foreground" strokeWidth={1.5} />
+                       {messagesOfficesDirectly ? (
+                         <MessageSquare className="w-8 h-8 text-muted-foreground" strokeWidth={1.5} />
+                       ) : (
+                         <Ticket className="w-8 h-8 text-muted-foreground" strokeWidth={1.5} />
+                       )}
                        <div>
-                         <p className="text-sm font-semibold text-foreground">Need help?</p>
-                         <p className="text-xs text-muted-foreground mt-1">Open a support ticket for this office.</p>
+                         <p className="text-sm font-semibold text-foreground">
+                           {messagesOfficesDirectly ? 'Reach this office' : 'Need help?'}
+                         </p>
+                         <p className="text-xs text-muted-foreground mt-1">
+                           {messagesOfficesDirectly
+                             ? 'Faculty can message any office directly — no ticket needed.'
+                             : 'Open a support ticket for this office.'}
+                         </p>
                        </div>
                        <button
                          onClick={() => setTicketPanelView('form')}
                          className="mt-2 px-4 py-2 text-xs font-medium rounded-lg border border-border/50 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                        >
-                         Open Ticket
+                         {messagesOfficesDirectly ? 'New Message' : 'Open Ticket'}
                        </button>
                      </div>
                    )}
@@ -1644,16 +1494,22 @@ export default function SidebarNavPreview({
                  enrolledClasses={joinedClasses.filter((c) => c.status === 'enrolled')}
                />
              </motion.div>
-           ) : activeId === 'p-active' ? (
-             <motion.div
-               key="p-active"
-               initial="hidden"
-               animate="visible"
-               exit="hidden"
-               variants={mainAnimation.item}
-               className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-             >
-               <ProjectShowcase onProjectClick={setSelectedProject} />
+           ) : activeId === 'my-classes' ? (
+             <motion.div key="my-classes" className="flex-1 min-h-0 flex flex-col">
+               <TeacherClassesPage />
+             </motion.div>
+           ) : activeId === 'office-announce' ? (
+             <motion.div key="office-announce" className="flex-1 min-h-0 flex flex-col">
+               <OfficeAnnouncePage officeName={officeNameForAccount} />
+             </motion.div>
+           ) : activeId === 'office-tickets' ? (
+             <motion.div key="office-tickets" className="flex-1 min-h-0 flex flex-col">
+               <OfficeTicketsPage officeName={officeNameForAccount} />
+             </motion.div>
+           ) : activeId.startsWith('admin-') ? (
+             /* One stable key across the three admin views so account edits survive nav. */
+             <motion.div key="admin" className="flex-1 min-h-0 flex flex-col">
+               <AdminUsersPage view={activeId.slice('admin-'.length) as AdminView} />
              </motion.div>
            ) : activeId === 'home' ? (
              <motion.div
@@ -1756,17 +1612,6 @@ export default function SidebarNavPreview({
             <ProfilePage key="profile" accountName={accountName} accountType={accountType} onClose={() => setShowProfile(false)} />
           )}
         </AnimatePresence>
-
-        {selectedProject && (
-          <ProjectDetailView
-            {...buildProjectDetail(
-              selectedProject,
-              showcaseProjects.indexOf(selectedProject),
-              accountName,
-              () => setSelectedProject(null),
-            )}
-          />
-        )}
 
         {isSearchOpen && (
           <div className="absolute inset-0 z-50 flex items-start justify-center pt-[15vh] bg-background/40 backdrop-blur-sm px-4">
