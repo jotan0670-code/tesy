@@ -46,6 +46,24 @@ npm run build    # typecheck + production build
 npm run lint
 ```
 
+## Deployment
+
+`npm run build` writes a fully static site to `dist/`. `vite.config.ts` sets `base: './'`, so
+that one build runs unchanged from a domain root (`noticampus.online`), a subfolder
+(`example.com/noticampus/`), or a GitHub Pages project path (`user.github.io/tesy/`) — no
+per-target rebuild.
+
+Because of that, public files referenced from code rather than markup must go through
+`assetUrl()` in `src/lib/campus-data.ts`. Vite rewrites paths it can see in markup and CSS; a
+string like `/ph/logo.jpg` inside a `.ts` file it cannot, and that path 404s under a subpath.
+
+**GitHub Pages** — `.github/workflows/deploy.yml` builds and publishes on every push to `main`.
+It needs Pages enabled once: *Settings → Pages → Build and deployment → Source: **GitHub Actions***.
+
+**Hostinger** — upload the contents of `dist/` (not the folder itself) to `public_html`. It is
+plain static files, so no Node runtime is required on the host. Once the PHP/MySQL API lands it
+will sit beside the build under `public_html/api`.
+
 ## Layout
 
 ```

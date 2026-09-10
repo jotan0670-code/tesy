@@ -126,11 +126,19 @@ const rawOffices: OfficeGroup[] = [
   },
 ];
 
-/** Image paths carry spaces and parentheses, so they are encoded once at the source. */
+/**
+ * Files under public/ referenced from code, not from markup, so Vite cannot
+ * rewrite them at build time. Prefixing BASE_URL keeps them resolving when the
+ * site is served from a subpath (GitHub Pages) rather than a domain root.
+ * Names carry spaces and parentheses, so they are encoded here once.
+ */
+export const assetUrl = (path: string): string =>
+  `${import.meta.env.BASE_URL}${encodeURI(path).replace(/^\//, '')}`;
+
 export const offices: OfficeGroup[] = rawOffices.map((office) => ({
   ...office,
-  image: encodeURI(office.image),
-  posts: office.posts.map((post) => ({ ...post, src: encodeURI(post.src) })),
+  image: assetUrl(office.image),
+  posts: office.posts.map((post) => ({ ...post, src: assetUrl(post.src) })),
 }));
 
 /** School-wide feed for the Home page — every office's posts pooled together. */
